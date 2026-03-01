@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book - Reading Tracker{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 30px;">Add New Book</h2>
+
+<form method="POST">
+    <div class="form-group">
+        <label>Title *</label>
+        <input type="text" name="title" required placeholder="Book title">
+    </div>
+    
+    <div class="form-group">
+        <label>Author</label>
+        <input type="text" name="author" placeholder="Author name">
+    </div>
+    
+    <div class="form-group">
+        <label>Number of Pages</label>
+        <input type="number" name="pages" placeholder="e.g., 350">
+    </div>
+    
+    <div class="form-group">
+        <label>Format</label>
+        <select name="format">
+            <option value="Paperback">Paperback</option>
+            <option value="Hardcover">Hardcover</option>
+            <option value="Kindle">Kindle</option>
+            <option value="Audiobook">Audiobook</option>
+            <option value="eBook">eBook</option>
+        </select>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Book</button>
+        <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

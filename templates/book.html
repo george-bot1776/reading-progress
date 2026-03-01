@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - Reading Tracker{% endblock %}
+
+{% block content %}
+<div class="book-detail">
+    <h2>{{ book.title }}</h2>
+    <p class="author">by {{ book.author or 'Unknown author' }}</p>
+    
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="label">Pages</div>
+            <div class="value green">{{ book.pages or '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Format</div>
+            <div class="value">{{ book.format or 'Paperback' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Date Added</div>
+            <div class="value">{{ book.date_added or '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Times Read</div>
+            <div class="value green">{{ book.read_count or 0 }}</div>
+        </div>
+        {% if book.rating %}
+        <div class="detail-item">
+            <div class="label">Rating</div>
+            <div class="value">{% for i in range(book.rating) %}★{% endfor %}</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+        <div class="detail-item" style="background: {% if book.date_finished %}#22c55e20{% else %}#1a1a1a{% endif %};">
+            <div class="label">Status</div>
+            <div class="value">
+                {% if book.date_finished %}
+                    ✅ Finished on {{ book.date_finished }}
+                {% elif book.date_started %}
+                    📖 Started on {{ book.date_started }}
+                {% else %}
+                    ○ Not started
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="detail-actions">
+        {% if not book.date_started %}
+        <form method="POST" action="/book/{{ book.id }}/start">
+            <button type="submit" class="btn btn-primary">Start Reading</button>
+        </form>
+        {% endif %}
+        
+        {% if book.date_started and not book.date_finished %}
+        <form method="POST" action="/book/{{ book.id }}/finish">
+            <button type="submit" class="btn btn-primary">Mark as Finished</button>
+        </form>
+        {% endif %}
+        
+        <form method="POST" action="/book/{{ book.id }}/delete" onsubmit="return confirm('Delete this book?');">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+        
+        <a href="/" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+{% endblock %}

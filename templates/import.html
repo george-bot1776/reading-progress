@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Import from Goodreads - Reading Tracker{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 30px;">Import from Goodreads</h2>
+
+<div class="upload-area">
+    <p>Export your library from Goodreads:<br>
+    <small style="color: #555;">Settings → Import and export → Export library</small></p>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" style="display: none;" id="fileInput" onchange="this.form.submit()">
+        <label for="fileInput" class="btn btn-primary" style="cursor: pointer;">
+            Choose CSV File
+        </label>
+    </form>
+</div>
+
+<div style="background: #111; padding: 20px; border-radius: 8px; margin-top: 30px;">
+    <h3 style="margin-bottom: 15px; font-size: 16px;">How to export from Goodreads:</h3>
+    <ol style="color: #888; line-height: 2; padding-left: 20px;">
+        <li>Go to <a href="https://www.goodreads.com" target="_blank" style="color: #22c55e;">goodreads.com</a></li>
+        <li>Click "My Books" → "Import and export" in the sidebar</li>
+        <li>Click "Export Library"</li>
+        <li>Upload the CSV file here</li>
+    </ol>
+</div>
+
+<p style="text-align: center; margin-top: 30px;">
+    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+</p>
+{% endblock %}

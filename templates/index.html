@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Reading Tracker{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_books }}</div>
+        <div class="stat-label">Total Books</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_pages|default(0) }}</div>
+        <div class="stat-label">Pages Read</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ books_finished }}</div>
+        <div class="stat-label">Books Finished</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ pages_this_year|default(0) }}</div>
+        <div class="stat-label">This Year</div>
+    </div>
+</div>
+
+<div style="text-align: center; margin-bottom: 30px;">
+    <a href="/add" class="btn btn-primary">Add Book</a>
+    <a href="/import" class="btn btn-secondary">Import from Goodreads</a>
+</div>
+
+{% if books %}
+<div class="books-grid">
+    {% for book in books %}
+    <a href="/book/{{ book.id }}" class="book-item" style="text-decoration: none; color: inherit;">
+        <div class="book-info">
+            <h3>{{ book.title }}</h3>
+            <p>{{ book.author or 'Unknown author' }}</p>
+        </div>
+        <div class="book-meta">
+            {% if book.pages %}<span class="pages">{{ book.pages }} pages</span><br>{% endif %}
+            {% if book.date_finished %}✅ Finished<br>{% endif %}
+            {% if book.date_started and not book.date_finished %}📖 Reading{% endif %}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No books yet</h2>
+    <p>Add your first book or import from Goodreads to get started.</p>
+    <a href="/add" class="btn btn-primary" style="margin-top: 20px;">Add Book</a>
+</div>
+{% endif %}
+{% endblock %}
