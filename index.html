@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            min-height: 100vh;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .big-number {
+            font-size: 72px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .label {
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        
+        .progress-status {
+            font-size: 20px;
+            margin-top: 8px;
+        }
+        
+        .ahead { color: #22c55e; }
+        .behind { color: #ef4444; }
+        .on-track { color: #fbbf24; }
+        
+        /* Settings */
+        .settings {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            padding: 16px;
+            background: #111;
+            border-radius: 10px;
+        }
+        
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .setting-item label {
+            font-size: 11px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .setting-item input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100px;
+            text-align: center;
+        }
+        
+        .setting-item input:focus {
+            outline: none;
+            border-color: #444;
+        }
+        
+        /* Lifetime Squares Grid */
+        .lifetime-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .years-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .year-block {
+            background: #111;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 140px;
+        }
+        
+        .year-block:hover {
+            background: #1a1a1a;
+        }
+        
+        .year-block.current {
+            border: 1px solid #fff;
+        }
+        
+        .year-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .year-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .year-pages {
+            font-size: 12px;
+            color: #22c55e;
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2px;
+        }
+        
+        .day-pixel {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: #222;
+        }
+        
+        .day-pixel.completed {
+            background: #22c55e;
+        }
+        
+        .day-pixel.behind {
+            background: #333;
+        }
+        
+        .day-pixel.empty {
+            background: transparent;
+        }
+        
+        .day-pixel.today {
+            border: 1px solid #fff;
+        }
+        
+        /* Monthly breakdown */
+        .months-section {
+            margin-bottom: 40px;
+        }
+        
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+        
+        .month-block {
+            background: #111;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .month-name {
+            font-size: 12px;
+            color: #555;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .month-pages {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .month-pages.hit-goal {
+            color: #22c55e;
+        }
+        
+        .month-pages.missed-goal {
+            color: #ef4444;
+        }
+        
+        .month-goal {
+            font-size: 11px;
+            color: #444;
+            margin-top: 4px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: #111;
+            padding: 32px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #333;
+            min-width: 300px;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .modal input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 20px;
+            width: 160px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal input:focus {
+            outline: none;
+            border-color: #555;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .modal button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .btn-save {
+            background: #22c55e;
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .btn-cancel {
+            background: #333;
+            color: #fff;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: #fff;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        /* Goodreads Import */
+        .import-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+        }
+        
+        .import-section h3 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #888;
+        }
+        
+        .import-btn {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .import-btn:hover {
+            background: #444;
+        }
+        
+        /* Instructions */
+        .instructions {
+            text-align: center;
+            color: #444;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="label">Total Pages Read</div>
+            <div class="big-number" id="totalPages">0</div>
+            <div class="progress-status" id="progressStatus">—</div>
+        </div>
+        
+        <!-- Settings -->
+        <div class="settings">
+            <div class="setting-item">
+                <label>Lifetime Goal</label>
+                <input type="number" id="lifetimeGoal" value="30000" onchange="saveSettings()">
+            </div>
+            <div class="setting-item">
+                <label>Daily Goal</label>
+                <input type="number" id="dailyGoal" value="25" onchange="saveSettings()">
+            </div>
+            <div class="setting-item">
+                <label>Start Year</label>
+                <input type="number" id="startYear" value="2020" onchange="saveSettings()">
+            </div>
+        </div>
+        
+        <!-- Lifetime Years Grid -->
+        <div class="lifetime-section">
+            <div class="section-title">Lifetime Progress (Click year to edit)</div>
+            <div class="years-grid" id="yearsGrid"></div>
+        </div>
+        
+        <!-- Monthly Breakdown -->
+        <div class="months-section">
+            <div class="section-title">This Year by Month</div>
+            <div class="months-grid" id="monthsGrid"></div>
+        </div>
+        
+        <!-- Goodreads Import -->
+        <div class="import-section">
+            <h3>📚 Import from Goodreads</h3>
+            <p style="color: #666; font-size: 13px; margin-bottom: 12px;">
+                Export your books from Goodreads (Settings → Import and export → Export library)<br>
+                then upload the CSV file below.
+            </p>
+            <input type="file" id="goodreadsFile" accept=".csv" onchange="importGoodreads()" style="display: none;">
+            <button class="import-btn" onclick="document.getElementById('goodreadsFile').click()">
+                Choose CSV File
+            </button>
+            <p id="importStatus" style="margin-top: 10px; font-size: 13px;"></p>
+        </div>
+        
+        <div class="instructions">
+            Click any year or day to edit. Data saves automatically to your browser.
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Log Pages</h2>
+            <input type="number" id="pagesInput" placeholder="Pages">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveLog()">Save</button>
+            </div>
+            <button class="btn-delete" onclick="deleteLog()" id="deleteBtn">Clear</button>
+        </div>
+    </div>
+    
+    <script>
+        // State
+        let state = {
+            lifetimeGoal: 30000,
+            dailyGoal: 25,
+            startYear: 2020,
+            // Format: { "2020": { "01": 500, "02": 600, ... }, ... }
+            yearlyData: {}
+        };
+        
+        let selectedYear = null;
+        let selectedMonth = null;
+        
+        // Load
+        function loadState() {
+            const saved = localStorage.getItem('readingTrackerV2');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+            document.getElementById('lifetimeGoal').value = state.lifetimeGoal;
+            document.getElementById('dailyGoal').value = state.dailyGoal;
+            document.getElementById('startYear').value = state.startYear;
+        }
+        
+        function saveState() {
+            localStorage.setItem('readingTrackerV2', JSON.stringify(state));
+        }
+        
+        function saveSettings() {
+            state.lifetimeGoal = parseInt(document.getElementById('lifetimeGoal').value) || 30000;
+            state.dailyGoal = parseInt(document.getElementById('dailyGoal').value) || 25;
+            state.startYear = parseInt(document.getElementById('startYear').value) || 2020;
+            saveState();
+            render();
+        }
+        
+        // Calculate totals
+        function getTotalPages() {
+            let total = 0;
+            for (const year in state.yearlyData) {
+                for (const month in state.yearlyData[year]) {
+                    total += state.yearlyData[year][month] || 0;
+                }
+            }
+            return total;
+        }
+        
+        function getExpectedPages() {
+            const start = new Date(state.startYear, 0, 1);
+            const today = new Date();
+            const days = Math.max(1, Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1);
+            return days * state.dailyGoal;
+        }
+        
+        // Render years grid
+        function render() {
+            renderYearsGrid();
+            renderMonthsGrid();
+            updateHeader();
+        }
+        
+        function renderYearsGrid() {
+            const grid = document.getElementById('yearsGrid');
+            grid.innerHTML = '';
+            
+            const currentYear = new Date().getFullYear();
+            const today = new Date();
+            
+            for (let year = state.startYear; year <= currentYear; year++) {
+                const yearData = state.yearlyData[year] || {};
+                const yearPages = Object.values(yearData).reduce((sum, p) => sum + (p || 0), 0);
+                
+                // Days in year
+                const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+                const daysInYear = isLeap ? 366 : 365;
+                
+                // Calculate expected pages for this year up to today
+                let expectedForYear = 0;
+                if (year === state.startYear) {
+                    const startDate = new Date(state.startYear, 0, 1);
+                    const endOfYear = new Date(state.startYear, 11, 31);
+                    const end = year === currentYear ? today : endOfYear;
+                    const days = Math.floor((end - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    expectedForYear = days * state.dailyGoal;
+                } else if (year < currentYear) {
+                    expectedForYear = 365 * state.dailyGoal;
+                } else {
+                    const startOfYear = new Date(currentYear, 0, 1);
+                    const days = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+                    expectedForYear = days * state.dailyGoal;
+                }
+                
+                const yearEl = document.createElement('div');
+                yearEl.className = 'year-block' + (year === currentYear ? ' current' : '');
+                
+                // Build days grid for this year
+                let daysHtml = '';
+                const isCurrentYear = year === currentYear;
+                const isPastYear = year < currentYear;
+                
+                for (let m = 0; m < 12; m++) {
+                    const monthKey = String(m + 1).padStart(2, '0');
+                    const monthPages = yearData[monthKey] || 0;
+                    
+                    // Calculate days in this month
+                    const daysInMonth = new Date(year, m + 1, 0).getDate();
+                    const expectedThisMonth = daysInMonth * state.dailyGoal;
+                    
+                    // Determine if month goal met
+                    let monthClass = 'empty';
+                    if (monthPages > 0 && monthPages >= expectedThisMonth * 0.9) {
+                        monthClass = 'completed';
+                    } else if (isPastYear && monthPages < expectedThisMonth * 0.5) {
+                        monthClass = 'behind';
+                    }
+                    
+                    daysHtml += `<div class="day-pixel ${monthClass}" title="${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]}: ${monthPages} pages"></div>`;
+                }
+                
+                yearEl.innerHTML = `
+                    <div class="year-header">
+                        <span class="year-label">${year}</span>
+                        <span class="year-pages">${yearPages.toLocaleString()} pgs</span>
+                    </div>
+                    <div class="days-grid">${daysHtml}</div>
+                `;
+                
+                yearEl.onclick = () => openYearModal(year);
+                grid.appendChild(yearEl);
+            }
+        }
+        
+        function renderMonthsGrid() {
+            const grid = document.getElementById('monthsGrid');
+            grid.innerHTML = '';
+            
+            const currentYear = new Date().getFullYear();
+            const yearData = state.yearlyData[currentYear] || {};
+            const today = new Date();
+            
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            for (let m = 0; m < 12; m++) {
+                const monthKey = String(m + 1).padStart(2, '0');
+                const pages = yearData[monthKey] || 0;
+                const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+                const expected = daysInMonth * state.dailyGoal;
+                
+                // Past months or current month
+                const isPastOrCurrent = m <= today.getMonth();
+                const hitGoal = pages >= expected;
+                
+                const monthEl = document.createElement('div');
+                monthEl.className = 'month-block';
+                monthEl.onclick = () => openMonthModal(currentYear, m + 1);
+                monthEl.style.cursor = 'pointer';
+                
+                monthEl.innerHTML = `
+                    <div class="month-name">${monthNames[m]}</div>
+                    <div class="month-pages ${isPastOrCurrent ? (hitGoal ? 'hit-goal' : 'missed-goal') : ''}">${pages}</div>
+                    <div class="month-goal">${expected} goal</div>
+                `;
+                
+                grid.appendChild(monthEl);
+            }
+        }
+        
+        function updateHeader() {
+            const total = getTotalPages();
+            const expected = getExpectedPages();
+            const diff = total - expected;
+            
+            document.getElementById('totalPages').textContent = total.toLocaleString();
+            
+            const statusEl = document.getElementById('progressStatus');
+            if (total >= expected) {
+                statusEl.textContent = `+${diff.toLocaleString()} pages ahead of schedule`;
+                statusEl.className = 'progress-status ahead';
+            } else if (total >= expected * 0.9) {
+                statusEl.textContent = `${diff.toLocaleString()} pages behind (on track)`;
+                statusEl.className = 'progress-status on-track';
+            } else {
+                statusEl.textContent = `${Math.abs(diff).toLocaleString()} pages behind`;
+                statusEl.className = 'progress-status behind';
+            }
+        }
+        
+        // Modals
+        function openYearModal(year) {
+            selectedYear = year;
+            selectedMonth = null;
+            const yearData = state.yearlyData[year] || {};
+            const total = Object.values(yearData).reduce((sum, p) => sum + (p || 0), 0);
+            
+            document.getElementById('modalTitle').textContent = `${year} Total: ${total.toLocaleString()} pages`;
+            document.getElementById('pagesInput').value = total;
+            document.getElementById('deleteBtn').style.display = total > 0 ? 'block' : 'none';
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('pagesInput').focus();
+        }
+        
+        function openMonthModal(year, month) {
+            selectedYear = year;
+            selectedMonth = month;
+            const monthKey = String(month).padStart(2, '0');
+            const pages = (state.yearlyData[year] && state.yearlyData[year][monthKey]) || 0;
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('modalTitle').textContent = `${monthNames[month-1]} ${year}`;
+            document.getElementById('pagesInput').value = pages || '';
+            document.getElementById('deleteBtn').style.display = pages > 0 ? 'block' : 'none';
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('pagesInput').focus();
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            selectedYear = null;
+            selectedMonth = null;
+        }
+        
+        function saveLog() {
+            const pages = parseInt(document.getElementById('pagesInput').value) || 0;
+            
+            if (!state.yearlyData[selectedYear]) {
+                state.yearlyData[selectedYear] = {};
+            }
+            
+            if (selectedMonth) {
+                const monthKey = String(selectedMonth).padStart(2, '0');
+                state.yearlyData[selectedYear][monthKey] = pages;
+            } else {
+                // Total for year - distribute proportionally to months or just store
+                // For simplicity, let's just log to current month if editing total
+                const today = new Date();
+                if (selectedYear === today.getFullYear()) {
+                    const monthKey = String(today.getMonth() + 1).padStart(2, '0');
+                    state.yearlyData[selectedYear][monthKey] = pages;
+                }
+            }
+            
+            saveState();
+            closeModal();
+            render();
+        }
+        
+        function deleteLog() {
+            if (selectedMonth) {
+                const monthKey = String(selectedMonth).padStart(2, '0');
+                if (state.yearlyData[selectedYear]) {
+                    delete state.yearlyData[selectedYear][monthKey];
+                }
+            } else {
+                delete state.yearlyData[selectedYear];
+            }
+            saveState();
+            closeModal();
+            render();
+        }
+        
+        // Goodreads Import
+        function importGoodreads() {
+            const file = document.getElementById('goodreadsFile').files[0];
+            if (!file) return;
+            
+            const status = document.getElementById('importStatus');
+            status.textContent = 'Processing...';
+            status.style.color = '#fbbf24';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n');
+                    
+                    // Find header row
+                    let headerIdx = -1;
+                    let colIndexes = {};
+                    
+                    for (let i = 0; i < Math.min(5, lines.length); i++) {
+                        const line = lines[i].toLowerCase();
+                        if (line.includes('title') && line.includes('author')) {
+                            headerIdx = i;
+                            const headers = lines[i].split(',').map(h => h.trim().replace(/"/g, ''));
+                            colIndexes.title = headers.findIndex(h => h.includes('title'));
+                            colIndexes.author = headers.findIndex(h => h.includes('author'));
+                            colIndexes.pages = headers.findIndex(h => h.includes('pages') || h.includes('num'));
+                            colIndexes.rating = headers.findIndex(h => h.includes('rating'));
+                            colIndexes.date = headers.findIndex(h => h.includes('date') && h.includes('read'));
+                            break;
+                        }
+                    }
+                    
+                    if (headerIdx === -1) {
+                        status.textContent = 'Could not find Goodreads data format. Expected CSV with title, author, number of pages columns.';
+                        status.style.color = '#ef4444';
+                        return;
+                    }
+                    
+                    let imported = 0;
+                    let totalPages = 0;
+                    
+                    // Parse data rows
+                    for (let i = headerIdx + 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        // Simple CSV parse (handles basic quotes)
+                        const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                        const cleanCols = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                        
+                        // Try to get page count
+                        let pages = 0;
+                        if (colIndexes.pages >= 0 && cleanCols[colIndexes.pages]) {
+                            const pageStr = cleanCols[colIndexes.pages].replace(/[^0-9]/g, '');
+                            pages = parseInt(pageStr) || 0;
+                        }
+                        
+                        // If no pages column, estimate at 300 pages per book
+                        if (pages === 0) {
+                            pages = 300;
+                        }
+                        
+                        totalPages += pages;
+                        imported++;
+                    }
+                    
+                    // Add to current month/year
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const monthKey = String(today.getMonth() + 1).padStart(2, '0');
+                    
+                    if (!state.yearlyData[year]) state.yearlyData[year] = {};
+                    state.yearlyData[year][monthKey] = (state.yearlyData[year][monthKey] || 0) + totalPages;
+                    
+                    saveState();
+                    render();
+                    
+                    status.textContent = `✅ Imported ${imported} books (${totalPages.toLocaleString()} pages)`;
+                    status.style.color = '#22c55e';
+                    
+                } catch (err) {
+                    status.textContent = 'Error: ' + err.message;
+                    status.style.color = '#ef4444';
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Close modal on outside click
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+        
+        // Init
+        loadState();
+        render();
+    </script>
+</body>
+</html>
